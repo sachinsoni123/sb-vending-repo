@@ -58,6 +58,9 @@ jobs:
     permissions:
       contents: 'read'
       id-token: 'write'
+    env:
+      WORKING_DIRECTORY_1: gp-vending/data
+      WORKING_DIRECTORY_2: sandbox-vending/data # Change this as per client name directory which ever you'are creating
 
     defaults:
       run:
@@ -79,13 +82,17 @@ jobs:
 
     - name: Terraform Init
       run: terraform init
+      working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
 
     - name: Terraform Format
       run: terraform fmt -check
-
+      working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
+      
     - name: Terraform Plan
       run: terraform plan 
+      working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
 
     - name: Terraform Apply
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       run: terraform apply -auto-approve
+      working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
