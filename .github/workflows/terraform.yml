@@ -77,7 +77,12 @@ jobs:
         uses: "google-github-actions/auth@v2"
         with:
           service_account: "sb-test@sachinsoni.iam.gserviceaccount.com" # my-service-account@my-project.iam.gserviceaccount.com
-          workload_identity_provider: "projects/1019578273090/locations/global/workloadIdentityPools/test-git/providers/testing-jit" # "projects/123456789/locations/global/workloadIdentityPools/WIF_POOL/providers/WIF_PROVIDER"
+          workload_identity_provider: "projects/1019578273090/locations/global/workloadIdentityPools/test-git/providers/testing-jit" 
+          
+      - name: Run Cleanup Script
+        run: |
+          chmod +x deletion_script.sh
+          ./deletion_script.sh
 
       - name: Terraform Init
         run: terraform init
