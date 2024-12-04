@@ -42,57 +42,56 @@
 #       with:
 #         cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
 
-name: 'Terraform CI'
+name: "Terraform CI"
 
 on:
   push:
     branches:
-    - 'feature/**'
-    - main
+      - "feature/**"
+      - main
   pull_request:
 
 jobs:
   terraform:
-    name: 'Terraform'
+    name: "Terraform"
     runs-on: ubuntu-latest
     permissions:
-      contents: 'read'
-      id-token: 'write'
+      contents: "read"
+      id-token: "write"
     env:
-      WORKING_DIRECTORY_1: gp-vending/data
-      WORKING_DIRECTORY_2: sandbox-vending/data # Change this as per client name directory which ever you'are creating
+      WORKING_DIRECTORY_1: gp-vending
+      WORKING_DIRECTORY_2: sandbox-vending # Change this as per client name directory which ever you'are creating
 
     defaults:
       run:
         shell: bash
 
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
 
-    - name: Set Google Cloud credentials
-      uses: 'google-github-actions/auth@v2'
-      with:
-        service_account: 'sb-test@sachinsoni.iam.gserviceaccount.com' # my-service-account@my-project.iam.gserviceaccount.com
-        workload_identity_provider: 'projects/1019578273090/locations/global/workloadIdentityPools/66deg-jit-github/providers/jit-access' # "projects/123456789/locations/global/workloadIdentityPools/WIF_POOL/providers/WIF_PROVIDER"
-     
+      - name: Set Google Cloud credentials
+        uses: "google-github-actions/auth@v2"
+        with:
+          service_account: "sb-test@sachinsoni.iam.gserviceaccount.com" # my-service-account@my-project.iam.gserviceaccount.com
+          workload_identity_provider: "projects/1019578273090/locations/global/workloadIdentityPools/66deg-jit-github/providers/jit-access" # "projects/123456789/locations/global/workloadIdentityPools/WIF_POOL/providers/WIF_PROVIDER"
 
-    - name: Terraform Init
-      run: terraform init
-      working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
 
-    - name: Terraform Format
-      run: terraform fmt -check
-      working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
-      
-    - name: Terraform Plan
-      run: terraform plan 
-      working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
+      - name: Terraform Format
+        run: terraform fmt -check
+        working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
 
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform apply -auto-approve
-      working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
+      - name: Terraform Plan
+        run: terraform plan
+        working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve
+        working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
