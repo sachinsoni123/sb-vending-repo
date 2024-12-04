@@ -56,7 +56,7 @@ jobs:
     name: "Terraform"
     runs-on: ubuntu-latest
     permissions:
-      contents: "read"
+      contents: "write"
       id-token: "write"
     env:
       WORKING_DIRECTORY_1: gp-vending
@@ -85,18 +85,30 @@ jobs:
           ./deletion_script.sh
 
       - name: Terraform Init
-        run: terraform init
-        working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
+        run: |
+          for dir in ${{ env.WORKING_DIRECTORY_1 }} ${{ env.WORKING_DIRECTORY_2 }}; do
+          echo "Running terraform init in $dir"
+          terraform init -chdir=$dir
+          done
 
-      - name: Terraform Format
-        run: terraform fmt -check
-        working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
+      - name: Terraform Format 
+        run: |
+          for dir in ${{ env.WORKING_DIRECTORY_1 }} ${{ env.WORKING_DIRECTORY_2 }}; do
+          echo "Running terraform fmt in $dir"
+          terraform fmt -chdir=$dir
+          done
 
       - name: Terraform Plan
-        run: terraform plan
-        working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
+        run: |
+          for dir in ${{ env.WORKING_DIRECTORY_1 }} ${{ env.WORKING_DIRECTORY_2 }}; do
+          echo "Running terraform plan in $dir"
+          terraform init -chdir=$dir
+          done
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -auto-approve
-        working-directory: ${{ env.WORKING_DIRECTORY_1 && env.WORKING_DIRECTORY_2 }}
+        run: |
+          for dir in ${{ env.WORKING_DIRECTORY_1 }} ${{ env.WORKING_DIRECTORY_2 }}; do
+          echo "Running terraform apply in $dir"
+          terraform apply -auto-approve -chdir=$dir
+          done
