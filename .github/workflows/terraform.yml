@@ -84,31 +84,36 @@ jobs:
           chmod +x deletion_script.sh
           ./deletion_script.sh
 
-      - name: Terraform Init
-        run: |
-          for dir in ${{ env.WORKING_DIRECTORY_1 }} ${{ env.WORKING_DIRECTORY_2 }}; do
-          echo "Running terraform init in $dir"
-          terraform init -chdir=$dir
-          done
+      - name: Terraform Init for WORKING_DIRECTORY_1
+        run: terraform init
+        working-directory: ${{ env.WORKING_DIRECTORY_1 }}
 
-      - name: Terraform Format 
-        run: |
-          for dir in ${{ env.WORKING_DIRECTORY_1 }} ${{ env.WORKING_DIRECTORY_2 }}; do
-          echo "Running terraform fmt in $dir"
-          terraform fmt -chdir=$dir
-          done
+      - name: Terraform Init for WORKING_DIRECTORY_2
+        run: terraform init
+        working-directory: ${{ env.WORKING_DIRECTORY_2 }}
 
-      - name: Terraform Plan
-        run: |
-          for dir in ${{ env.WORKING_DIRECTORY_1 }} ${{ env.WORKING_DIRECTORY_2 }}; do
-          echo "Running terraform plan in $dir"
-          terraform init -chdir=$dir
-          done
+      - name: Terraform Format for WORKING_DIRECTORY_1
+        run: terraform fmt -check
+        working-directory: ${{ env.WORKING_DIRECTORY_1 }}
 
-      - name: Terraform Apply
+      - name: Terraform Format for WORKING_DIRECTORY_2
+        run: terraform fmt -check
+        working-directory: ${{ env.WORKING_DIRECTORY_2 }}
+
+      - name: Terraform Plan for WORKING_DIRECTORY_1
+        run: terraform plan
+        working-directory: ${{ env.WORKING_DIRECTORY_1 }}
+
+      - name: Terraform Plan for WORKING_DIRECTORY_2
+        run: terraform plan
+        working-directory: ${{ env.WORKING_DIRECTORY_2 }}
+
+      - name: Terraform Apply for WORKING_DIRECTORY_1
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: |
-          for dir in ${{ env.WORKING_DIRECTORY_1 }} ${{ env.WORKING_DIRECTORY_2 }}; do
-          echo "Running terraform apply in $dir"
-          terraform apply -auto-approve -chdir=$dir
-          done
+        run: terraform apply -auto-approve
+        working-directory: ${{ env.WORKING_DIRECTORY_1 }}
+
+      - name: Terraform Apply for WORKING_DIRECTORY_2
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -auto-approve
+        working-directory: ${{ env.WORKING_DIRECTORY_2 }}
