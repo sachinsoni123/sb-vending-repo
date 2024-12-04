@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "sachinsoni-sb-bucket-test-poc"
+    bucket = "sachin-sb-backend"
     prefix = "terraform/state/sandbox"
   }
 }

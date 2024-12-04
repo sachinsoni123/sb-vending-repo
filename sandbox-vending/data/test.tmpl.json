@@ -1,6 +1,6 @@
 {
   "settings": {
-    "names": ["nagesh-sb1"],
+    "names": ["test-sb1"],
     "parent_id": "folders/240572390624",
     "api": [
       "bigquery.googleapis.com",
