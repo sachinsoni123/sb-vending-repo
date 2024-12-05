@@ -19,22 +19,10 @@ delete_matching_files() {
             file="${path}/${project_id}.tmpl.json"
             if [[ -f "$file" ]]; then
                 echo "Deleting file: $file"
-                git rm "$file"
+                rm "$file" || { echo "Failed to delete $file"; exit 1; }
             fi
         done < disabled_projects.txt
     done
-}
-
-# Commit and push changes
-commit_and_push_changes() {
-    if git diff --cached --quiet; then
-        echo "No files to delete."
-        return
-    fi
-
-    echo "Committing and pushing changes..."
-    git commit -m "Delete JSON files for disabled projects"
-    git push origin "$(git rev-parse --abbrev-ref HEAD)"
 }
 
 # Main script execution
@@ -46,7 +34,6 @@ main() {
     fi
 
     delete_matching_files
-    commit_and_push_changes
     echo "Cleanup completed."
 }
 
