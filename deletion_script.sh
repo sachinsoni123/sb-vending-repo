@@ -27,6 +27,10 @@ delete_matching_files() {
 
 # Commit and push changes
 commit_and_push_changes() {
+    # Configure Git user identity
+    git config --global user.name nagesh66  
+    git config --global user.email nagesh.kumarsingh@66degrees.com
+
     if git diff --cached --quiet; then
         echo "No files to delete."
         return
@@ -34,7 +38,7 @@ commit_and_push_changes() {
 
     echo "Committing and pushing changes..."
     git commit -m "Delete JSON files for disabled projects"
-    git push origin "$(git rev-parse --abbrev-ref HEAD)"
+    git push origin "$(git rev-parse --abbrev-ref HEAD):refs/heads/$(git rev-parse --abbrev-ref HEAD)"
 }
 
 # Main script execution
