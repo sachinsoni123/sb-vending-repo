@@ -15,7 +15,7 @@ get_file_sha() {
     echo "Fetching SHA for $file_path..."
     RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
         "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path?ref=$BRANCH")
-    
+
     SHA=$(echo "$RESPONSE" | jq -r '.sha')
     if [[ "$SHA" == "null" ]]; then
         echo "File $file_path not found in branch $BRANCH."
@@ -32,11 +32,10 @@ delete_file() {
     echo "Deleting $file_path from GitHub repository $REPO..."
 
     # Properly escape the JSON payload
-    RESPONSE=$(curl -s -X DELETE \
-  -H "Authorization: token $GITHUB_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d "{\"message\": \"Delete $file_path\", \"sha\": \"$sha\", \"branch\": \"$BRANCH\"}" \
-  "https://api.github.com/repos/$OWNER/$REPO/contents/$(echo "$file_path" | urlencode)")
+    RESPONSE=$(curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"message\": \"Delete $file_path\", \"sha\": \"$sha\", \"branch\": \"$BRANCH\"}" \
+            "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path")
 
     if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" ]]; then
         echo "File $file_path successfully deleted."
@@ -53,7 +52,7 @@ delete_project_files() {
     for dir in "${DIRS[@]}"; do
         # Construct the file path for the directory
         file_path="$dir/*$project_id*.tmpl.json"
-        
+
         # Fetch and delete files that match the pattern
         files_to_delete=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
             "https://api.github.com/repos/$OWNER/$REPO/contents/$dir?ref=$BRANCH" | jq -r '.[] | select(.name | test("'"$project_id"'")) | .path')
