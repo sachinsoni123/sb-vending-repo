@@ -1,111 +1,57 @@
 #!/bin/bash
 
-
-
 # Variables
+TOKEN=$GITHUB_TOKEN  # Use the GitHub token from environment variables
+OWNER="sachinsoni123"  # Your GitHub username or organization
+REPO="sb-vending-repo"  # Repository name
+BRANCH="main"  # Branch to delete the file from
+FILES=("gp-vending/data" "sandbox-vending/data")  # Array of file paths to delete
 
-GITHUB_TOKEN=$GITHUB_TOKEN
+# Fetch the file's SHA
+get_file_sha() {
+    local file_path=$1
+    echo "Fetching SHA for $file_path..."
+    RESPONSE=$(curl -s -H "Authorization: token $TOKEN" \
+        "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path?ref=$BRANCH")
 
-GITHUB_OWNER="sachinsoni123"
-
-GITHUB_REPO="sb-vending-repo"
-
-GITHUB_BRANCH="main" # Change this to your target branch
-
-GITHUB_CONTENTS_PATHS=("gp-vending/data" "sandbox-vending/data")
-
-
-
-# Fetch disabled projects from Google Cloud
-
-fetch_disabled_projects() {
-
-    echo "Fetching disabled projects..."
-
-    gcloud projects list --filter="lifecycleState=DELETE_REQUESTED OR lifecycleState=DELETED" --format="value(projectId)" > disabled_projects.txt
-
-}
-
-
-
-# Delete files using SHA method via GitHub API
-
-delete_matching_files() {
-
-    echo "Deleting files matching disabled projects..."
-
-    for path in "${GITHUB_CONTENTS_PATHS[@]}"; do
-
-        echo "Checking path: $path"
-
-        while IFS= read -r project_id; do
-
-            file="${path}/${project_id}.tmpl.json"
-
-            api_url="https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${file}"
-
-            
-
-            echo "Fetching SHA for: $file"
-
-            sha=$(curl -s -H "Authorization: token ${GITHUB_TOKEN}" "${api_url}" | jq -r '.sha')
-
-            
-
-            if [[ "$sha" != "null" ]]; then
-
-                echo "Deleting file: $file"
-
-                curl -s -X DELETE -H "Authorization: token ${GITHUB_TOKEN}" \
-
-                    -H "Content-Type: application/json" \
-
-                    -d "$(jq -n --arg message "Delete JSON file for disabled project $project_id" \
-
-                             --arg branch "${GITHUB_BRANCH}" --arg sha "${sha}" \
-
-                             '{message: $message, branch: $branch, sha: $sha}')" \
-
-                    "${api_url}"
-
-                echo "File deleted: $file"
-
-            else
-
-                echo "File not found: $file"
-
-            fi
-
-        done < disabled_projects.txt
-
-    done
-
-}
-
-
-
-# Main script execution
-
-main() {
-
-    fetch_disabled_projects
-
-    if [[ ! -s disabled_projects.txt ]]; then
-
-        echo "No disabled projects found."
-
-        exit 0
-
+    SHA=$(echo "$RESPONSE" | jq -r '.sha')
+    if [[ "$SHA" == "null" ]]; then
+        echo "File $file_path not found in branch $BRANCH."
+        return 1
     fi
-
-
-
-    delete_matching_files
-
-    echo "Cleanup completed."
-
+    echo "SHA for $file_path: $SHA"
+    echo "$SHA"
 }
 
+# Delete the file
+delete_file() {
+    local file_path=$1
+    local sha=$2
+    echo "Deleting $file_path from branch $BRANCH..."
+    RESPONSE=$(curl -s -X DELETE -H "Authorization: token $TOKEN" \
+        -H "Content-Type: application/json" \
+        -d "{\"message\": \"Delete $file_path\", \"sha\": \"$sha\", \"branch\": \"$BRANCH\"}" \
+        "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path")
 
+    if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" ]]; then
+        echo "File $file_path successfully deleted."
+    else
+        echo "Failed to delete $file_path. Response: $RESPONSE"
+        return 1
+    fi
+}
 
+# Main execution
+main() {
+    for file_path in "${FILES[@]}"; do
+        sha=$(get_file_sha "$file_path")
+        if [[ $? -eq 0 ]]; then
+            delete_file "$file_path" "$sha"
+        else
+            echo "Skipping deletion for $file_path due to missing SHA."
+        fi
+    done
+}
+
+# Run the script
 main
