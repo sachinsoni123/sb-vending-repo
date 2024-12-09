@@ -34,7 +34,7 @@ delete_file() {
     # Properly escape the JSON payload
     RESPONSE=$(curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
         -H "Content-Type: application/json" \
-        -d "{\"message\": \"Delete $file_path\", \"sha\": \"$SHA\", \"branch\": \"$BRANCH\"}" \
+        -d "{\"message\": \"Delete $file_path\", \"sha\": \"$sha\", \"branch\": \"$BRANCH\"}" \
         "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path")
 
     if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" ]]; then
@@ -51,7 +51,7 @@ delete_project_files() {
 
     for dir in "${DIRS[@]}"; do
         # Construct the file path for the directory
-        file_path="$dir/*$project_id*.tmpl.json"
+        file_path="$dir/$project_id.tmpl.json"
         
         # Fetch and delete files that match the pattern
         files_to_delete=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
