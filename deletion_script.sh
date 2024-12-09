@@ -22,9 +22,7 @@ fetch_disabled_projects() {
 
     echo "Fetching disabled projects..."
 
-    gcloud projects list --filter="lifecycleState=DELETE_REQUESTED OR lifecycleState=DELETED" \
-
-        --format="value(projectId)" > disabled_projects.txt
+    gcloud projects list --filter="lifecycleState=DELETE_REQUESTED OR lifecycleState=DELETED" --format="value(projectId)" > disabled_projects.txt
 
 }
 
