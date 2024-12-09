@@ -15,8 +15,9 @@ get_file_sha() {
     echo "Fetching SHA for $file_path..."
     RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
         "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path?ref=$BRANCH")
-
+    echo $RESPONSE
     SHA=$(echo "$RESPONSE" | jq -r '.sha')
+    echo $SHA
     if [[ "$SHA" == "null" ]]; then
         echo "File $file_path not found in branch $BRANCH."
         return 1
@@ -26,66 +27,67 @@ get_file_sha() {
 }
 
 # Function to delete file from GitHub
-delete_file() {
-    local file_path=$1
-    local sha=$2
+# delete_file() {
+#     local file_path=$1
+#     local sha=$2
 
-    echo "Deleting $file_path from GitHub repository $REPO..."
-    echo "SHA for deletion: $sha"  # Print the SHA
+#     echo "Deleting $file_path from GitHub repository $REPO..."
+#     echo "SHA for deletion: $sha"  # Print the SHA
 
-    # Properly escape the JSON payload (using jq for clarity)
-    JSON_PAYLOAD=$(jq -n \
-        --arg message "Delete $file_path" \
-        --arg sha "$sha" \
-        --arg branch "$BRANCH" \
-        '{message: $message, sha: $sha, branch: $branch}')
-    echo "JSON Payload: $JSON_PAYLOAD" # Print the JSON
+#     # Properly escape the JSON payload (using jq for clarity)
+#     JSON_PAYLOAD=$(jq -n \
+#         --arg message "Delete $file_path" \
+#         --arg sha "$sha" \
+#         --arg branch "$BRANCH" \
+#         '{message: $message, sha: $sha, branch: $branch}')
+#     echo "JSON Payload: $JSON_PAYLOAD" # Print the JSON
 
-    RESPONSE=$(curl -s -v -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "$JSON_PAYLOAD" \
-              "https://api.github.com/repos/$OWNER/$REPO/contents/$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$file_path'))")") 
-    echo $RESPONSE
-    if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" ]]; then
-        echo "File $file_path successfully deleted."
-    else
-        echo "Failed to delete $file_path. Response: $RESPONSE"
-    fi
-}
+#     RESPONSE=$(curl -s -v -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
+#               -H "Content-Type: application/json" \
+#               -d "$JSON_PAYLOAD" \
+#               "https://api.github.com/repos/$OWNER/$REPO/contents/$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$file_path'))")") 
+#     echo $RESPONSE
+#     if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" ]]; then
+#         echo "File $file_path successfully deleted."
+#     else
+#         echo "Failed to delete $file_path. Response: $RESPONSE"
+#     fi
+# }
 
-# Function to delete project-related files from GitHub
-delete_project_files() {
-    local project_id=$1  # Project ID passed as argument
-    echo "Deleting files related to project: $project_id"
-    files_to_delete=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-                  "https://api.github.com/repos/$OWNER/$REPO/contents/$dir?ref=$BRANCH" | \
-                  jq -r '.[] | select(.name | test("'"$project_id"'")) | .path')
-    for dir in "${DIRS[@]}"; do
-        for file in $files_to_delete; do
-            sha=$(get_file_sha "$file") 
-            if [[ $? -eq 0 ]]; then
-                delete_file "$file" "$sha"
-            fi
-        done
-    done
-}
+# # Function to delete project-related files from GitHub
+# delete_project_files() {
+#     local project_id=$1  # Project ID passed as argument
+#     echo "Deleting files related to project: $project_id"
+#     files_to_delete=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+#                   "https://api.github.com/repos/$OWNER/$REPO/contents/$dir?ref=$BRANCH" | \
+#                   jq -r '.[] | select(.name | test("'"$project_id"'")) | .path')
+#     for dir in "${DIRS[@]}"; do
+#         for file in $files_to_delete; do
+#             sha=$(get_file_sha "$file") 
+#             if [[ $? -eq 0 ]]; then
+#                 delete_file "$file" "$sha"
+#             fi
+#         done
+#     done
+# }
 
 # Main execution
 main() {
     # Save the list of disabled projects to the file
-    echo "$GCP_PROJECTS" > "$DISABLED_PROJECTS_FILE"
-    echo "Disabled projects list saved to $DISABLED_PROJECTS_FILE"
+    # echo "$GCP_PROJECTS" > "$DISABLED_PROJECTS_FILE"
+    # echo "Disabled projects list saved to $DISABLED_PROJECTS_FILE"
 
-    # Read project IDs into an array
-      readarray -t PROJECT_IDS <<< "$GCP_PROJECTS"
+    # # Read project IDs into an array
+    #   readarray -t PROJECT_IDS <<< "$GCP_PROJECTS"
 
-      # Iterate over the array
-      for project_id in "${PROJECT_IDS[@]}"; do
-          delete_project_files "$project_id"
-      done
+    #   # Iterate over the array
+    #   for project_id in "${PROJECT_IDS[@]}"; do
+    #       delete_project_files "$project_id"
+    #   done
 
 
-    echo "File deletion process completed."
+    # echo "File deletion process completed."
+    get_file_sha
 }
 
 # Run the script
