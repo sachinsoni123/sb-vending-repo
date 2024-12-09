@@ -43,7 +43,17 @@ delete_file() {
     local file_path=$1
     local sha=$2
     echo "Deleting $file_path from branch $BRANCH..."
-    PAYLOAD="{\"message\": \"Delete $file_path\", \"sha\": \"$sha\", \"branch\": \"$BRANCH\"}"
+    
+    # Properly escape the payload
+    PAYLOAD=$(cat <<EOF
+{
+  "message": "Delete $file_path",
+  "sha": "$sha",
+  "branch": "$BRANCH"
+}
+EOF
+)
+
     echo "Payload: $PAYLOAD"  # Debugging line
 
     RESPONSE=$(curl -s -X DELETE -H "Authorization: token $TOKEN" \
