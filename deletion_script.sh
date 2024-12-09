@@ -45,7 +45,7 @@ delete_file() {
               -H "Content-Type: application/json" \
               -d "$JSON_PAYLOAD" \
               "https://api.github.com/repos/$OWNER/$REPO/contents/$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$file_path'))")") 
-
+    echo $RESPONSE
     if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" ]]; then
         echo "File $file_path successfully deleted."
     else
