@@ -57,9 +57,11 @@ delete_file() {
 delete_project_files() {
     local project_id=$1  # Project ID passed as argument
     echo "Deleting files related to project: $project_id"
-
+    files_to_delete=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+                  "https://api.github.com/repos/$OWNER/$REPO/contents/$dir?ref=$BRANCH" | \
+                  jq -r '.[] | select(.name | test("'"$project_id"'")) | .path')
     for dir in "${DIRS[@]}"; do
-        for file in $DISABLED_PROJECTS_FILE; do
+        for file in $files_to_delete; do
             sha=$(get_file_sha "$file") 
             if [[ $? -eq 0 ]]; then
                 delete_file "$file" "$sha"
