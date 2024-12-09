@@ -16,14 +16,12 @@ get_file_sha() {
     RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
         "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path?ref=$BRANCH")
 
-    echo "GitHub API Response for SHA fetch: $RESPONSE"  # Debug log
-    SHA=$(echo "$RESPONSE" | jq -r '.sha')  # Extract only the SHA value
+    SHA=$(echo "$RESPONSE" | jq -r '.sha')
     if [[ "$SHA" == "null" ]]; then
         echo "File $file_path not found in branch $BRANCH."
         return 1
     fi
-    echo "SHA for $file_path: $SHA"  # Debug log for SHA value
-    echo "$SHA"  # Return only the SHA
+    echo "SHA for $file_path: $SHA"
     return 0
 }
 
@@ -34,17 +32,12 @@ delete_file() {
     echo "Deleting $file_path from GitHub repository $REPO..."
 
     # Properly escape the JSON payload
-    PAYLOAD=$(jq -n --arg msg "Delete $file_path" --arg sha "$sha" --arg branch "$BRANCH" \
-        '{message: $msg, sha: $sha, branch: $branch}')
-    echo "Payload: $PAYLOAD"  # Debug log
+    encoded_file_path=$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$file_path'))")
 
-    RESPONSE=$(curl -s -X DELETE \
-        -H "Authorization: token $GITHUB_TOKEN" \
-        -H "Content-Type: application/json" \
-        -d "$PAYLOAD" \
-        "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path")
-
-    echo "GitHub API Response for file deletion: $RESPONSE"  # Debug log
+      RESPONSE=$(curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
+                 -H "Content-Type: application/json" \
+                 -d "{\"message\": \"Delete $file_path\", \"sha\": \"$sha\", \"branch\": \"$BRANCH\"}" \
+                 "https://api.github.com/repos/$OWNER/$REPO/contents/$encoded_file_path")
 
     if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" ]]; then
         echo "File $file_path successfully deleted."
@@ -59,18 +52,13 @@ delete_project_files() {
     echo "Deleting files related to project: $project_id"
 
     for dir in "${DIRS[@]}"; do
-        # Fetch and delete files that match the pattern
-        files_to_delete=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/$OWNER/$REPO/contents/$dir?ref=$BRANCH" | \
-            jq -r '.[] | select(.name | test("'"$project_id"'")) | .path')
+        # ... (rest of the code to get files_to_delete)
 
         for file in $files_to_delete; do
-            echo "Processing file: $file"
-            sha=$(get_file_sha "$file")
+            # Refetch the SHA right before deleting
+            sha=$(get_file_sha "$file") 
             if [[ $? -eq 0 ]]; then
                 delete_file "$file" "$sha"
-            else
-                echo "Could not fetch SHA for $file. Skipping..."
             fi
         done
     done
@@ -82,10 +70,14 @@ main() {
     echo "$GCP_PROJECTS" > "$DISABLED_PROJECTS_FILE"
     echo "Disabled projects list saved to $DISABLED_PROJECTS_FILE"
 
-    # Iterate over each project ID and delete related files
-    for project_id in $GCP_PROJECTS; do
-        delete_project_files "$project_id"
-    done
+    # Read project IDs into an array
+      readarray -t PROJECT_IDS <<< "$GCP_PROJECTS"
+
+      # Iterate over the array
+      for project_id in "${PROJECT_IDS[@]}"; do
+          delete_project_files "$project_id"
+      done
+
 
     echo "File deletion process completed."
 }
