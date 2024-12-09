@@ -61,6 +61,7 @@ delete_project_files() {
 
         for file in $files_to_delete; do
             sha=$(get_file_sha "$file")
+            echo $sha
             if [[ $? -eq 0 ]]; then
                 delete_file "$file" "$sha"
             fi
