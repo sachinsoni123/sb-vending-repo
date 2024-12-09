@@ -29,15 +29,22 @@ get_file_sha() {
 delete_file() {
     local file_path=$1
     local sha=$2
+
     echo "Deleting $file_path from GitHub repository $REPO..."
+    echo "SHA for deletion: $sha"  # Print the SHA
 
-    # Properly escape the JSON payload
-    encoded_file_path=$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$file_path'))")
+    # Properly escape the JSON payload (using jq for clarity)
+    JSON_PAYLOAD=$(jq -n \
+        --arg message "Delete $file_path" \
+        --arg sha "$sha" \
+        --arg branch "$BRANCH" \
+        '{message: $message, sha: $sha, branch: $branch}')
+    echo "JSON Payload: $JSON_PAYLOAD" # Print the JSON
 
-      RESPONSE=$(curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
-                 -H "Content-Type: application/json" \
-                 -d "{\"message\": \"Delete $file_path\", \"sha\": \"$sha\", \"branch\": \"$BRANCH\"}" \
-                 "https://api.github.com/repos/$OWNER/$REPO/contents/$encoded_file_path")
+    RESPONSE=$(curl -s -v -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "$JSON_PAYLOAD" \
+              "https://api.github.com/repos/$OWNER/$REPO/contents/$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$file_path'))")") 
 
     if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" ]]; then
         echo "File $file_path successfully deleted."
