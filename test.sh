@@ -4,7 +4,7 @@
 TOKEN=$GITHUB_TOKEN  # Use the GitHub token from environment variables
 OWNER="sachinsoni123"  # Your GitHub username or organization
 REPO="sb-vending-repo"  # Repository name
-FILE_PATH="sandbox-vending/data/nagesh-sb.tmpl.json"  # Path to the file to delete
+FILE_PATH="sandbox-vending/data/sachin-sb.tmpl.json"  # Path to the file to delete
 BRANCH="main"  # Branch to delete the file from
 
 # Fetch the file's SHA
@@ -12,8 +12,9 @@ get_file_sha() {
     echo "Fetching SHA for $FILE_PATH..."
     RESPONSE=$(curl -s -H "Authorization: token $TOKEN" \
         "https://api.github.com/repos/$OWNER/$REPO/contents/$FILE_PATH?ref=$BRANCH")
-
+    echo $RESPONSE
     SHA=$(echo "$RESPONSE" | jq -r '.sha')
+    echo $SHA
     if [[ "$SHA" == "null" ]]; then
         echo "File $FILE_PATH not found in branch $BRANCH."
         exit 1
