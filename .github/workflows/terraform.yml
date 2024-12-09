@@ -83,6 +83,8 @@ jobs:
         run: |
           chmod +x deletion_script.sh
           ./deletion_script.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEMO_CLEANUP }}
 
       - name: Terraform Init for WORKING_DIRECTORY_1
         run: terraform init
