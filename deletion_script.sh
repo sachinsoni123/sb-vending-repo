@@ -14,8 +14,10 @@ get_file_sha() {
     RESPONSE=$(curl -s -H "Authorization: token $TOKEN" \
         "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path?ref=$BRANCH")
 
+    echo "Response from SHA fetch: $RESPONSE"  # Debugging line
+
     SHA=$(echo "$RESPONSE" | jq -r '.sha')
-    if [[ "$SHA" == "null" ]]; then
+    if [[ "$SHA" == "null" || -z "$SHA" ]]; then
         echo "File $file_path not found in branch $BRANCH."
         return 1
     fi
@@ -28,12 +30,17 @@ delete_file() {
     local file_path=$1
     local sha=$2
     echo "Deleting $file_path from branch $BRANCH..."
+    PAYLOAD="{\"message\": \"Delete $file_path\", \"sha\": \"$sha\", \"branch\": \"$BRANCH\"}"
+    echo "Payload: $PAYLOAD"  # Debugging line
+
     RESPONSE=$(curl -s -X DELETE -H "Authorization: token $TOKEN" \
         -H "Content-Type: application/json" \
-        -d "{\"message\": \"Delete $file_path\", \"sha\": \"$sha\", \"branch\": \"$BRANCH\"}" \
+        -d "$PAYLOAD" \
         "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path")
 
-    if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" ]]; then
+    echo "Response from delete: $RESPONSE"  # Debugging line
+
+    if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" && "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "" ]]; then
         echo "File $file_path successfully deleted."
     else
         echo "Failed to delete $file_path. Response: $RESPONSE"
