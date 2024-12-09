@@ -34,7 +34,7 @@ delete_file() {
     # Properly escape the JSON payload
     RESPONSE=$(curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
         -H "Content-Type: application/json" \
-        -d "{\"message\": \"Delete $file_path\", \"sha\": \"$sha\", \"branch\": \"$BRANCH\"}" \
+        -d "{\"message\": \"Delete $file_path\", \"sha\": \"$SHA\", \"branch\": \"$BRANCH\"}" \
         "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path")
 
     if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" ]]; then
