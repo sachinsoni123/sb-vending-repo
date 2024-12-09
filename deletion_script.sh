@@ -8,8 +8,8 @@ BRANCH="main"  # Branch to delete the file from
 # Array of specific file paths to delete
 DISABLED_PROJECTS_FILE="disabled_projects.txt"
 
-# Directory path pattern
-BASE_PATHS=("gp-vending/data" "sandbox-vending/data")  # Base directories for file paths
+# Base directories for file paths
+BASE_PATHS=("gp-vending/data" "sandbox-vending/data")  # Directories where files are located
 FILE_PATTERN="*.tmpl.json"  # File pattern for deletion
 
 # Fetch disabled projects
@@ -77,20 +77,22 @@ main() {
         
         # Iterate over each base path and check for .tmpl.json files
         for base_path in "${BASE_PATHS[@]}"; do
-            # Replace the placeholder with project ID and search for *.tmpl.json files
-            full_path="${base_path//gp-vending/$project_id}"  # Replace placeholder with project ID
-            echo "Looking for files in $full_path"
+            # Form the correct file path based on the project ID
+            if [[ "$base_path" == "gp-vending/data" ]]; then
+                full_path="gp-vending/data/$project_id.tmpl.json"  # Correct path for gp-vending
+            elif [[ "$base_path" == "sandbox-vending/data" ]]; then
+                full_path="sandbox-vending/data/$project_id.tmpl.json"  # Correct path for sandbox-vending
+            fi
+
+            echo "Looking for file: $full_path"
             
-            # Search for .tmpl.json files
-            for file in $(gsutil ls "gs://$OWNER/$REPO/$full_path/$FILE_PATTERN" 2>/dev/null); do
-                echo "Found file: $file"
-                sha=$(get_file_sha "$file")
-                if [[ $? -eq 0 ]]; then
-                    delete_file "$file" "$sha"
-                else
-                    echo "Skipping deletion for $file due to missing SHA."
-                fi
-            done
+            # Check if the file exists on GitHub
+            sha=$(get_file_sha "$full_path")
+            if [[ $? -eq 0 ]]; then
+                delete_file "$full_path" "$sha"
+            else
+                echo "Skipping deletion for $full_path due to missing SHA."
+            fi
         done
     done < "$DISABLED_PROJECTS_FILE"
 }
