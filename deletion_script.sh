@@ -1,107 +1,86 @@
 #!/bin/bash
 
 # Variables
-DISABLED_PROJECTS_FILE="disabled_projects.txt"  # File to store disabled project IDs
-DIRS=("gp-vending/data" "sandbox-vending/data")  # Directories to check for project files
-GCP_PROJECTS=$(gcloud projects list --filter="lifecycleState=DELETE_REQUESTED OR lifecycleState=DELETED" --format="value(projectId)")  # Get list of deleted projects
-GITHUB_TOKEN=$GITHUB_TOKEN  # GitHub token
+TOKEN=$GITHUB_TOKEN  # Use the GitHub token from environment variables
 OWNER="sachinsoni123"  # Your GitHub username or organization
 REPO="sb-vending-repo"  # Repository name
-BRANCH="main"  # Branch where the files should be deleted from
+BRANCH="main"  # Branch to delete files from
+DIRECTORIES=("gp-vending/data" "sandbox-vending/data")  # Target directories
+PATTERN="*.tmpl.json"  # File pattern to match
+DISABLED_PROJECTS_FILE="./disabled_projects.txt"  # File to store disabled projects
 
-# Function to fetch file SHA from GitHub
+# Fetch list of disabled projects and save to file
+fetch_disabled_projects() {
+    echo "Fetching list of disabled projects..."
+    gcloud projects list --filter="lifecycleState:DELETE_REQUESTED OR lifecycleState:DISABLED" \
+        --format="value(projectId)" > "$DISABLED_PROJECTS_FILE"
+    
+    if [[ ! -s "$DISABLED_PROJECTS_FILE" ]]; then
+        echo "No disabled projects found. Exiting."
+        exit 0
+    fi
+    echo "Disabled projects saved to $DISABLED_PROJECTS_FILE."
+}
+
+# Fetch file SHA
 get_file_sha() {
     local file_path=$1
     echo "Fetching SHA for $file_path..."
-    RESPONSE=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+    RESPONSE=$(curl -s -H "Authorization: token $TOKEN" \
         "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path?ref=$BRANCH")
-    echo $RESPONSE
+
     SHA=$(echo "$RESPONSE" | jq -r '.sha')
-    echo $SHA
     if [[ "$SHA" == "null" ]]; then
         echo "File $file_path not found in branch $BRANCH."
         return 1
     fi
     echo "SHA for $file_path: $SHA"
-    return 0
+    echo "$SHA"
 }
 
-# Function to delete file from GitHub
-# delete_file() {
-#     local file_path=$1
-#     local sha=$2
+# Delete file
+delete_file() {
+    local file_path=$1
+    local sha=$2
+    echo "Deleting $file_path from branch $BRANCH..."
+    RESPONSE=$(curl -s -X DELETE -H "Authorization: token $TOKEN" \
+        -H "Content-Type: application/json" \
+        -d "{\"message\": \"Delete $file_path\", \"sha\": \"$sha\", \"branch\": \"$BRANCH\"}" \
+        "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path")
 
-#     echo "Deleting $file_path from GitHub repository $REPO..."
-#     echo "SHA for deletion: $sha"  # Print the SHA
-
-#     # Properly escape the JSON payload (using jq for clarity)
-#     JSON_PAYLOAD=$(jq -n \
-#         --arg message "Delete $file_path" \
-#         --arg sha "$sha" \
-#         --arg branch "$BRANCH" \
-#         '{message: $message, sha: $sha, branch: $branch}')
-#     echo "JSON Payload: $JSON_PAYLOAD" # Print the JSON
-
-#     RESPONSE=$(curl -s -v -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
-#               -H "Content-Type: application/json" \
-#               -d "$JSON_PAYLOAD" \
-#               "https://api.github.com/repos/$OWNER/$REPO/contents/$(python -c "import urllib.parse; print(urllib.parse.quote_plus('$file_path'))")") 
-#     echo $RESPONSE
-#     if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" ]]; then
-#         echo "File $file_path successfully deleted."
-#     else
-#         echo "Failed to delete $file_path. Response: $RESPONSE"
-#     fi
-# }
-
-# # Function to delete project-related files from GitHub
-# delete_project_files() {
-#     local project_id=$1  # Project ID passed as argument
-#     echo "Deleting files related to project: $project_id"
-#     files_to_delete=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-#                   "https://api.github.com/repos/$OWNER/$REPO/contents/$dir?ref=$BRANCH" | \
-#                   jq -r '.[] | select(.name | test("'"$project_id"'")) | .path')
-#     for dir in "${DIRS[@]}"; do
-#         for file in $files_to_delete; do
-#             sha=$(get_file_sha "$file") 
-#             if [[ $? -eq 0 ]]; then
-#                 delete_file "$file" "$sha"
-#             fi
-#         done
-#     done
-# }
+    if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" ]]; then
+        echo "File $file_path successfully deleted."
+    else
+        echo "Failed to delete $file_path. Response: $RESPONSE"
+        exit 1
+    fi
+}
 
 # Main execution
 main() {
-    # Save the list of disabled projects to the file
-     echo "$GCP_PROJECTS" > "$DISABLED_PROJECTS_FILE"
-    # echo "Disabled projects list saved to $DISABLED_PROJECTS_FILE"
+    fetch_disabled_projects
 
-    # # Read project IDs into an array
-    #   readarray -t PROJECT_IDS <<< "$GCP_PROJECTS"
+    echo "Processing directories..."
+    for dir in "${DIRECTORIES[@]}"; do
+        echo "Checking directory: $dir"
+        RESPONSE=$(curl -s -H "Authorization: token $TOKEN" \
+            "https://api.github.com/repos/$OWNER/$REPO/contents/$dir?ref=$BRANCH")
 
-    #   # Iterate over the array
-    #   for project_id in "${PROJECT_IDS[@]}"; do
-    #       delete_project_files "$project_id"
-    #   done
+        FILES=$(echo "$RESPONSE" | jq -r '.[].name' | grep "$PATTERN")
 
-
-    # echo "File deletion process completed."
-   if [[ ! -f $DISABLED_PROJECTS_FILE ]]; then
-    echo "File $DISABLED_PROJECTS_FILE not found. Exiting."
-    exit 1
-fi
-
-# Read project IDs from the file
-while IFS= read -r project_id; do
-    for dir in "${dirs[@]}"; do
-        file_path="$dir/${project_id}.tmpl.json"
-        get_file_sha "$file_path"
-        if [[ $? -ne 0 ]]; then
-            echo "Failed to fetch SHA for file: $file_path"
-        fi
+        for file in $FILES; do
+            PROJECT_NAME=$(echo "$file" | cut -d. -f1)  # Extract project name from filename
+            if grep -qx "$PROJECT_NAME" "$DISABLED_PROJECTS_FILE"; then
+                FILE_PATH="$dir/$file"
+                SHA=$(get_file_sha "$FILE_PATH")
+                if [[ -n "$SHA" ]]; then
+                    delete_file "$FILE_PATH" "$SHA"
+                fi
+            else
+                echo "Skipping $file (project is active or not found in disabled projects)."
+            fi
+        done
     done
-done < "$DISABLED_PROJECTS_FILE"
 }
 
 # Run the script
