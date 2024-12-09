@@ -5,7 +5,7 @@ TOKEN=$GITHUB_TOKEN  # Use the GitHub token from environment variables
 OWNER="sachinsoni123"  # Your GitHub username or organization
 REPO="sb-vending-repo"  # Repository name
 BRANCH="main"  # Branch to delete the file from
-FILES=("gp-vending/data/file1.json" "sandbox-vending/data/file2.json")  # Array of specific file paths to delete
+FILES=("gp-vending/data" "sandbox-vending/data")  # Array of specific file paths to delete
 
 # Fetch the file's SHA
 get_file_sha() {
