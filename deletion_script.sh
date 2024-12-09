@@ -5,7 +5,16 @@ TOKEN=$GITHUB_TOKEN  # Use the GitHub token from environment variables
 OWNER="sachinsoni123"  # Your GitHub username or organization
 REPO="sb-vending-repo"  # Repository name
 BRANCH="main"  # Branch to delete the file from
-FILES=("gp-vending/data" "sandbox-vending/data")  # Array of specific file paths to delete
+FILES=("gp-vending/data" "sandbox-vending/data") 
+# Array of specific file paths to delete
+DISABLED_PROJECTS_FILE="disabled_projects.txt"
+
+# Fetch disabled projects
+fetch_disabled_projects() {
+    echo "Fetching disabled projects..."
+    gcloud projects list --filter="lifecycleState=DELETE_REQUESTED OR lifecycleState=DELETED" --format="value(projectId)" > "$DISABLED_PROJECTS_FILE"
+    echo "Disabled projects saved to $DISABLED_PROJECTS_FILE"
+}
 
 # Fetch the file's SHA
 get_file_sha() {
@@ -21,6 +30,7 @@ get_file_sha() {
         echo "File $file_path not found in branch $BRANCH."
         return 1
     fi
+    echo "SHA for $file_path: $SHA"
     echo "$SHA"
 }
 
@@ -49,14 +59,27 @@ delete_file() {
 
 # Main execution
 main() {
-    for file_path in "${FILES[@]}"; do
-        sha=$(get_file_sha "$file_path")
-        if [[ $? -eq 0 ]]; then
-            delete_file "$file_path" "$sha"
-        else
-            echo "Skipping deletion for $file_path due to missing SHA."
-        fi
-    done
+    # Fetch disabled projects
+    fetch_disabled_projects
+
+    if [[ ! -s $DISABLED_PROJECTS_FILE ]]; then
+        echo "No disabled projects found. Exiting."
+        exit 0
+    fi
+
+    # Iterate over each disabled project
+    while read -r project_id; do
+        echo "Processing project: $project_id"
+        for file_template in "${FILES[@]}"; do
+            file_path="${file_template//gp-vending/$project_id}"  # Replace placeholder with project ID
+            sha=$(get_file_sha "$file_path")
+            if [[ $? -eq 0 ]]; then
+                delete_file "$file_path" "$sha"
+            else
+                echo "Skipping deletion for $file_path due to missing SHA."
+            fi
+        done
+    done < "$DISABLED_PROJECTS_FILE"
 }
 
 # Run the script
