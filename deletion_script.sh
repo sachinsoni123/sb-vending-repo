@@ -37,6 +37,8 @@ delete_file() {
         -d "{\"message\": \"Delete $file_path\", \"sha\": \"$sha\", \"branch\": \"$BRANCH\"}" \
         "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path")
 
+    echo $RESPONSE
+
     if [[ "$(echo "$RESPONSE" | jq -r '.commit.sha')" != "null" ]]; then
         echo "File $file_path successfully deleted."
     else
