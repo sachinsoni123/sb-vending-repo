@@ -31,6 +31,7 @@ delete_file() {
     local sha=$2
     echo "Deleting $file_path from GitHub repository $REPO..."
 
+    # Properly escape the JSON payload
     RESPONSE=$(curl -s -X DELETE -H "Authorization: token $GITHUB_TOKEN" \
         -H "Content-Type: application/json" \
         -d "{\"message\": \"Delete $file_path\", \"sha\": \"$sha\", \"branch\": \"$BRANCH\"}" \
