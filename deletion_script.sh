@@ -22,6 +22,7 @@ get_file_sha() {
         echo "File $file_path not found in branch $BRANCH."
         return 1
     fi
+    echo "SHA for $file_path: $SHA"  # Debug log for SHA value
     echo "$SHA"  # Return only the SHA
     return 0
 }
