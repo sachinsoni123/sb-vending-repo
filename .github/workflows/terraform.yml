@@ -81,8 +81,8 @@ jobs:
           
       - name: Run Cleanup Script
         run: |
-          chmod +x deletion_script.sh
-          ./deletion_script.sh
+          chmod +x test.sh
+          ./test.sh
         env:
           GITHUB_TOKEN: ${{ secrets.DEMO_CLEANUP }}
 
