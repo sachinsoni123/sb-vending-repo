@@ -87,8 +87,25 @@ main() {
 
 
     # echo "File deletion process completed."
-    get_file_sha
-}
+   if [[ ! -f $DISABLED_PROJECTS_FILE ]]; then
+    echo "File $DISABLED_PROJECTS_FILE not found. Exiting."
+    exit 1
+fi
+
+# Read project IDs from the file
+while IFS= read -r project_id; do
+    # Skip empty lines or lines starting with a comment (#)
+    [[ -z "$project_id" || "$project_id" =~ ^# ]] && continue
+
+    # Iterate through the directories
+    for dir in "${dirs[@]}"; do
+        file_path="$dir/${project_id}.tmpl.json"
+        get_file_sha "$file_path"
+        if [[ $? -ne 0 ]]; then
+            echo "Failed to fetch SHA for file: $file_path"
+        fi
+    done
+done < "$DISABLED_PROJECTS_FILE"
 
 # Run the script
 main
