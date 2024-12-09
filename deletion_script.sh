@@ -94,10 +94,6 @@ fi
 
 # Read project IDs from the file
 while IFS= read -r project_id; do
-    # Skip empty lines or lines starting with a comment (#)
-    [[ -z "$project_id" || "$project_id" =~ ^# ]] && continue
-
-    # Iterate through the directories
     for dir in "${dirs[@]}"; do
         file_path="$dir/${project_id}.tmpl.json"
         get_file_sha "$file_path"
@@ -106,6 +102,7 @@ while IFS= read -r project_id; do
         fi
     done
 done < "$DISABLED_PROJECTS_FILE"
+}
 
 # Run the script
 main
