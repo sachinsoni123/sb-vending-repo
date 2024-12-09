@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Variables
-DISABLED_PROJECTS_FILE=$(gcloud projects list --filter="lifecycleState=DELETE_REQUESTED OR lifecycleState=DELETED" --format="value(projectId)">disabled_projects.txt)  # File to store disabled project IDs
+DISABLED_PROJECTS_FILE="disabled_projects.txt"  # File to store disabled project IDs
 DIRS=("gp-vending/data" "sandbox-vending/data")  # Directories to check for project files
-#GCP_PROJECTS=$(gcloud projects list --filter="lifecycleState=DELETE_REQUESTED OR lifecycleState=DELETED" --format="value(projectId)")  # Get list of deleted projects
+GCP_PROJECTS=$(gcloud projects list --filter="lifecycleState=DELETE_REQUESTED OR lifecycleState=DELETED" --format="value(projectId)")  # Get list of deleted projects
 GITHUB_TOKEN=$GITHUB_TOKEN  # GitHub token
 OWNER="sachinsoni123"  # Your GitHub username or organization
 REPO="sb-vending-repo"  # Repository name
@@ -74,7 +74,7 @@ get_file_sha() {
 # Main execution
 main() {
     # Save the list of disabled projects to the file
-    # echo "$GCP_PROJECTS" > "$DISABLED_PROJECTS_FILE"
+     echo "$GCP_PROJECTS" > "$DISABLED_PROJECTS_FILE"
     # echo "Disabled projects list saved to $DISABLED_PROJECTS_FILE"
 
     # # Read project IDs into an array
