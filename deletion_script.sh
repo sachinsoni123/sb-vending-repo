@@ -24,7 +24,7 @@ fetch_disabled_projects() {
 get_file_sha() {
     local file_path=$1
     echo "Fetching SHA for $file_path..."
-    RESPONSE=$(curl -s -H "Authorization: token $TOKEN" \
+    RESPONSE=$(curl -L -H "Authorization: token $TOKEN" \
         "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path?ref=$BRANCH")
 
     echo "Response from SHA fetch: $RESPONSE"  # Debugging line
