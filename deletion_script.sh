@@ -3,7 +3,7 @@
 # Variables
 GITHUB_REPO="sachinsoni123/sb-vending-repo"
 GITHUB_BRANCH="main"
-GITHUB_DIRECTORIES=("sandbox-vending/data" "gp-vending/data")
+GITHUB_DIRECTORIES=("sandbox-vending/data" "sandbox-vending/templates")
 GITHUB_API_URL="https://api.github.com/repos/${GITHUB_REPO}/contents"
 
 # Check if GITHUB_TOKEN is set
@@ -36,16 +36,17 @@ process_and_delete_files() {
     local directory="$1"
     local github_files="github_files_${directory//\//_}.txt"
 
-    echo "Processing and deleting files in directory: $directory"
+    echo "Processing files in directory: $directory"
     while IFS= read -r encoded_file; do
         file=$(decode_base64 "$encoded_file")
         filename=$(echo "$file" | jq -r '.name')
         sha=$(echo "$file" | jq -r '.sha')
         filepath=$(echo "$file" | jq -r '.path')
 
+        # Check if file matches disabled project IDs
         if [[ "$filename" == *.tmpl.json ]]; then
             project_id="${filename%.tmpl.json}"
-            if grep -q "$project_id" disabled_projects.txt; then
+            if grep -q "^${project_id}$" disabled_projects.txt; then
                 echo "Deleting file: $filename"
                 curl -s -X DELETE \
                     -H "Authorization: token ${GITHUB_TOKEN}" \
