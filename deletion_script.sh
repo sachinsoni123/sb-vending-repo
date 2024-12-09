@@ -59,10 +59,7 @@ delete_project_files() {
     echo "Deleting files related to project: $project_id"
 
     for dir in "${DIRS[@]}"; do
-        # ... (rest of the code to get files_to_delete)
-
         for file in $files_to_delete; do
-            # Refetch the SHA right before deleting
             sha=$(get_file_sha "$file") 
             if [[ $? -eq 0 ]]; then
                 delete_file "$file" "$sha"
