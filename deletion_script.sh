@@ -59,7 +59,7 @@ delete_project_files() {
     echo "Deleting files related to project: $project_id"
 
     for dir in "${DIRS[@]}"; do
-        for file in $files_to_delete; do
+        for file in $DISABLED_PROJECTS_FILE; do
             sha=$(get_file_sha "$file") 
             if [[ $? -eq 0 ]]; then
                 delete_file "$file" "$sha"
