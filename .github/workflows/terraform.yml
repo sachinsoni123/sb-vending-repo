@@ -6,7 +6,10 @@ on:
       - "feature/**"
       - main
   pull_request:
-
+  
+  repository_dispatch:
+    types: 
+      - trigger-gitops
 jobs:
   terraform:
     name: "Terraform"
