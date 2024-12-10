@@ -1,7 +1,7 @@
 {
     "settings": {
-      "names_gp": ["gp1"],
-      "names_poc": ["poc"],
+      "names_gp": ["gp2"],
+      "names_poc": ["poc1"],
       "names_app": ["sunil-app"],
       "parent_id": "organizations/906927793089",
       "api": [
