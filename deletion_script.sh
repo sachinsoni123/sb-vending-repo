@@ -4,6 +4,7 @@ OWNER="sachinsoni123"     # GitHub username or organization
 REPO="sb-vending-repo"     # Repository name
 BRANCH="main"        # Branch to delete the file from
 GITHUB_DIRECTORIES=("sandbox-vending/data" "gp-vending/data")
+DELETION_OCCURRED=false  # Flag to track if any deletion happened
 
 # Fetch disabled projects
 fetch_disabled_projects() {
@@ -41,6 +42,7 @@ delete_file_from_github() {
             "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path")
 
         echo "Delete response: $delete_response"
+        DELETION_OCCURRED=true  # Mark deletion occurred
     fi
 }
 
@@ -58,4 +60,9 @@ while IFS= read -r project_id; do
     done
 done < disabled_projects.txt
 
-echo "File deletion process completed."
+# Final output
+if $DELETION_OCCURRED; then
+    echo "File deletion process completed with some files deleted."
+else
+    echo "File deletion process completed. No files were deleted."
+fi
