@@ -2,7 +2,7 @@
     "settings": {
       "names_gp": ["gp1"],
       "names_poc": ["poc"],
-      "names_app": ["test-app"],
+      "names_app": ["sunil-app"],
       "parent_id": "organizations/906927793089",
       "api": [
         "bigquery.googleapis.com",
@@ -16,7 +16,7 @@
         "aiplatform.googleapis.com",
         "vpcaccess.googleapis.com"
       ],
-      "project_name": "test-app",
+      "project_name": "sunil-app",
       "billing_id": "012BAE-CAC265-849A70",
       "organization_id": "906927793089",
       "owners_members": ["user:nagesh.kumarsingh@66degrees.com"],
