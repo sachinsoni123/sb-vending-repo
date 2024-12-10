@@ -19,7 +19,7 @@ delete_file_from_github() {
     local directory=$1
     local project_id=$2
 
-    file_path="$directory/$project_id.json"
+    file_path="$directory/$project_id.tmpl.json"
 
     echo "Checking for file: $file_path"
 
