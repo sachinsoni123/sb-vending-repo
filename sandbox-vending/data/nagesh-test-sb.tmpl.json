@@ -1,6 +1,6 @@
 {
     "settings": {
-      "names": ["sachin-test-sb"],
+      "names": ["nagesh-test-sb"],
       "parent_id": "folders/240572390624",
       "api": [
         "bigquery.googleapis.com",
@@ -14,7 +14,7 @@
         "aiplatform.googleapis.com",
         "vpcaccess.googleapis.com"
       ],
-      "project_name": "sachin-test-sb",
+      "project_name": "nagesh-test-sb",
       "billing_id": "012BAE-CAC265-849A70",
       "organization_id": "906927793089",
       "owners_members": ["user:sachin.soni@66degrees.com"],
