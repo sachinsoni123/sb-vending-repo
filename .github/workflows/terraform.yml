@@ -86,36 +86,36 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.DEMO_CLEANUP }}
 
-      - name: Terraform Init for WORKING_DIRECTORY_1
+      - name: Terraform Init for ${{ env.WORKING_DIRECTORY_1 }}
         run: terraform init
         working-directory: ${{ env.WORKING_DIRECTORY_1 }}
 
-      - name: Terraform Init for WORKING_DIRECTORY_2
+      - name: Terraform Init for ${{ env.WORKING_DIRECTORY_2 }}
         run: terraform init
         working-directory: ${{ env.WORKING_DIRECTORY_2 }}
 
-      - name: Terraform Format for WORKING_DIRECTORY_1
+      - name: Terraform Format for ${{ env.WORKING_DIRECTORY_1 }}
         run: terraform fmt -check
         working-directory: ${{ env.WORKING_DIRECTORY_1 }}
 
-      - name: Terraform Format for WORKING_DIRECTORY_2
+      - name: Terraform Format for ${{ env.WORKING_DIRECTORY_2 }}
         run: terraform fmt -check
         working-directory: ${{ env.WORKING_DIRECTORY_2 }}
 
-      - name: Terraform Plan for WORKING_DIRECTORY_1
+      - name: Terraform Plan for ${{ env.WORKING_DIRECTORY_1 }}
         run: terraform plan
         working-directory: ${{ env.WORKING_DIRECTORY_1 }}
 
-      - name: Terraform Plan for WORKING_DIRECTORY_2
+      - name: Terraform Plan for ${{ env.WORKING_DIRECTORY_2 }}
         run: terraform plan
         working-directory: ${{ env.WORKING_DIRECTORY_2 }}
 
-      - name: Terraform Apply for WORKING_DIRECTORY_1
+      - name: Terraform Apply for ${{ env.WORKING_DIRECTORY_1 }}
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve
         working-directory: ${{ env.WORKING_DIRECTORY_1 }}
 
-      - name: Terraform Apply for WORKING_DIRECTORY_2
+      - name: Terraform Apply for ${{ env.WORKING_DIRECTORY_2 }}
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: terraform apply -auto-approve
         working-directory: ${{ env.WORKING_DIRECTORY_2 }}
