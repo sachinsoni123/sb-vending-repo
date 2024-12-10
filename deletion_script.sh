@@ -1,83 +1,61 @@
 #!/bin/bash
+TOKEN=$GITHUB_TOKEN  # GitHub token from environment variables
+OWNER="sachinsoni123"     # GitHub username or organization
+REPO="sb-vending-repo"     # Repository name
+BRANCH="main"        # Branch to delete the file from
+GITHUB_DIRECTORIES=("sandbox-vending/data" "gp-vending/data")
 
-# Variables
-GITHUB_REPO="sachinsoni123/sb-vending-repo"
-GITHUB_BRANCH="main"
-GITHUB_DIRECTORIES=("sandbox-vending/data" "sandbox-vending/templates")
-GITHUB_API_URL="https://api.github.com/repos/${GITHUB_REPO}/contents"
-
-# Check if GITHUB_TOKEN is set
-if [[ -z "$GITHUB_TOKEN" ]]; then
-    echo "Error: GITHUB_TOKEN is not set. Please export your GitHub token as an environment variable."
-    exit 1
-fi
-
-# Fetch disabled projects from Google Cloud
+# Fetch disabled projects
 fetch_disabled_projects() {
     echo "Fetching disabled projects..."
     gcloud projects list --filter="lifecycleState=DELETE_REQUESTED OR lifecycleState=DELETED" \
         --format="value(projectId)" > disabled_projects.txt
+    echo "Disabled projects:"
+    cat disabled_projects.txt
 }
 
-# Fetch GitHub files in the specified directory
-fetch_github_files() {
-    local directory="$1"
-    echo "Fetching GitHub files from directory: $directory"
-    curl -s -H "Authorization: token ${GITHUB_TOKEN}" "${GITHUB_API_URL}/${directory}" | jq -r '.[] | @base64' > "github_files_${directory//\//_}.txt"
-}
+# Function to delete file from GitHub
+delete_file_from_github() {
+    local directory=$1
+    local project_id=$2
 
-# Decode base64 content safely
-decode_base64() {
-    echo "$1" | base64 --decode
-}
+    file_path="$directory/$project_id.json"
 
-# Process files and delete matching ones
-process_and_delete_files() {
-    local directory="$1"
-    local github_files="github_files_${directory//\//_}.txt"
+    echo "Checking for file: $file_path"
 
-    echo "Processing files in directory: $directory"
-    while IFS= read -r encoded_file; do
-        file=$(decode_base64 "$encoded_file")
-        filename=$(echo "$file" | jq -r '.name')
-        sha=$(echo "$file" | jq -r '.sha')
-        filepath=$(echo "$file" | jq -r '.path')
+    # Get file details from GitHub
+    response=$(curl -s -H "Authorization: token $TOKEN" \
+        "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path?ref=$BRANCH")
 
-        # Check if file matches disabled project IDs
-        if [[ "$filename" == *.tmpl.json ]]; then
-            project_id="${filename%.tmpl.json}"
-            if grep -q "^${project_id}$" disabled_projects.txt; then
-                echo "Deleting file: $filename"
-                curl -s -X DELETE \
-                    -H "Authorization: token ${GITHUB_TOKEN}" \
-                    -d "$(jq -n --arg message "Deleting disabled project JSON file: $filename" \
-                             --arg branch "$GITHUB_BRANCH" --arg sha "$sha" \
-                             '{message: $message, branch: $branch, sha: $sha}')" \
-                    "${GITHUB_API_URL}/${filepath}"
-            fi
-        fi
-    done < "$github_files"
+    # Check if file exists
+    sha=$(echo "$response" | jq -r .sha)
+
+    if [[ "$sha" == "null" || -z "$sha" ]]; then
+        echo "No file found for project: $project_id in directory: $directory"
+    else
+        echo "Found file: $file_path with SHA: $sha"
+
+        # Delete the file from GitHub
+        delete_response=$(curl -s -X DELETE -H "Authorization: token $TOKEN" \
+            -d "{\"message\": \"Delete $file_path\", \"sha\": \"$sha\"}" \
+            "https://api.github.com/repos/$OWNER/$REPO/contents/$file_path")
+
+        echo "Delete response: $delete_response"
+    fi
 }
 
 # Main script execution
-main() {
-    fetch_disabled_projects
-    if [[ ! -s disabled_projects.txt ]]; then
-        echo "No disabled projects found."
-        exit 0
-    fi
+fetch_disabled_projects
 
+if [[ ! -f disabled_projects.txt ]]; then
+    echo "No disabled projects file found. Exiting."
+    exit 1
+fi
+
+while IFS= read -r project_id; do
     for directory in "${GITHUB_DIRECTORIES[@]}"; do
-        fetch_github_files "$directory"
-        github_files="github_files_${directory//\//_}.txt"
-        if [[ ! -s "$github_files" ]]; then
-            echo "No files found in the GitHub repository path: $directory"
-            continue
-        fi
-        process_and_delete_files "$directory"
+        delete_file_from_github "$directory" "$project_id"
     done
+done < disabled_projects.txt
 
-    echo "Cleanup completed."
-}
-
-main
+echo "File deletion process completed."
