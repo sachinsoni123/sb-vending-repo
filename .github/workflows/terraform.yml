@@ -39,8 +39,8 @@ jobs:
       - name: Run Cleanup Script
         id: cleanup
         run: |
-          chmod +x cleanup_script.sh
-          OUTPUT=$(./cleanup_script.sh)
+          chmod +x deletion_script.sh
+          OUTPUT=$(./deletion_script.sh)
           echo "$OUTPUT"
           if [[ "$OUTPUT" == *"File deletion process completed."* ]]; then
             echo "deletion_occurred=true" >> $GITHUB_ENV
