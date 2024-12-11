@@ -4,7 +4,7 @@
     "parent_id": "folders/240572390624",
     "api": [
       "run.googleapis.com",
-      "compute.googleapis.com",
+      "compute.googleapis.com"
     ],
     "project_name": "arsh-sb",
     "billing_id": "012BAE-CAC265-849A70",
