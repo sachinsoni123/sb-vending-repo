@@ -1,5 +1,6 @@
 module "sandbox_folder" {
   for_each        = { for k, v in local.project_vending_data_map : k => v if v.settings.sandbox-vending != false }
+# for_each       = local.project_vending_data_map
   source          = "../modules/folders"
   organization_id = each.value.settings.sandbox-vending.organization_id
   folder_name     = each.value.settings.sandbox-vending.names
@@ -8,6 +9,7 @@ module "sandbox_folder" {
 
 module "sandbox_project" {
   for_each       = { for k, v in local.project_vending_data_map : k => v if v.settings.sandbox-vending != false }
+# for_each       = local.project_vending_data_map
   source         = "../modules/project_factory"
   project_name   = each.value.settings.sandbox-vending.project_name
   random_suffix  = false
@@ -22,6 +24,7 @@ module "sandbox_project" {
 
 module "sandbox_budget_alert" {
   for_each        = { for k, v in local.project_vending_data_map : k => v if v.settings.sandbox-vending != false }
+# for_each       = local.project_vending_data_map
   source          = "../modules/budget"
   project_name    = each.value.settings.sandbox-vending.project_name
   billing_id      = each.value.settings.sandbox-vending.billing_id
