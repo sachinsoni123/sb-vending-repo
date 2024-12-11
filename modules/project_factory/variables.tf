@@ -21,3 +21,10 @@ variable "owners_members" {
   type        = list(string)
   description = "List of users to add to the owners group"
 }
+
+variable "random_suffix" {
+  type        = bool
+  description = "This will append the random suffix to the project ID"
+}
+
+
