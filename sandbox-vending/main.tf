@@ -1,9 +1,9 @@
 module "sandbox_folder" {
   for_each        = local.project_vending_data_map
   source          = "../modules/folders"
-  organization_id = each.value.settings.organization_id
-  folder_name     = each.value.settings.names
-  parent_id       = each.value.settings.parent_id
+  organization_id = each.value.settings.sandbox-vending.organization_id
+  folder_name     = each.value.settings.sandbox-vending.names
+  parent_id       = each.value.settings.sandbox-vending.parent_id
 }
 
 module "sandbox_project" {
