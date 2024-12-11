@@ -22,12 +22,13 @@ module "sandbox_project" {
 module "sandbox_budget_alert" {
   for_each        = local.project_vending_data_map
   source          = "../modules/budget"
-  project_name    = each.value.settings.project_name
-  billing_id      = each.value.settings.billing_id
+  project_name    = each.value.settings.sandbox-vending.project_name
+  billing_id      = each.value.settings.sandbox-vending.billing_id
   project_no      = module.sandbox_project[each.key].project_number
-  approved_budget = each.value.settings.approved_budget
-  members         = each.value.settings.notification_members
+  approved_budget = each.value.settings.sandbox-vending.approved_budget
+  members         = each.value.settings.sandbox-vending.notification_members
   depends_on = [
     module.sandbox_project
   ]
 }
+
