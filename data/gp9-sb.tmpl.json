@@ -1,0 +1,24 @@
+{
+    "settings": {
+      "names_gp": ["gp9"],
+      "names_poc": ["poc9"],
+      "names_app": ["gp9-sb"],
+      "parent_id": "organizations/906927793089",
+      "api": [
+        "run.googleapis.com",
+        "compute.googleapis.com"
+      ],
+      "project_name": "gp9-sb",
+      "billing_id": "012BAE-CAC265-849A70",
+      "organization_id": "906927793089",
+      "owners_members": ["user:nagesh.kumarsingh@66degrees.com"],
+      "notification_members": [
+        "nagesh.kumarsingh@66degrees.com",
+        "sachin.soni@66degrees.com"
+      ],
+      "approved_budget": "100",
+      "labels": {
+        "created-by": "terraform"
+      }
+    }
+  }
