@@ -2,14 +2,14 @@
     "settings": {
         "sandbox-vending": {
             "names": [
-                "sufi-sb"
+                "sufia-sb"
             ],
             "parent_id": "folders/240572390624",
             "api": [
                 "run.googleapis.com",
                 "compute.googleapis.com"
             ],
-            "project_name": "sufi-sb",
+            "project_name": "sufia-sb",
             "billing_id": "012BAE-CAC265-849A70",
             "organization_id": "906927793089",
             "owners_members": [
@@ -26,20 +26,20 @@
         },
         "gp-vending": {
             "names_gp": [
-                "gp8"
+                "gp-a"
             ],
             "names_poc": [
-                "poc7"
+                "poc-a"
             ],
             "names_app": [
-                "sufi-sb"
+                "sufia-sb"
             ],
             "parent_id": "organizations/906927793089",
             "api": [
                 "run.googleapis.com",
                 "compute.googleapis.com"
             ],
-            "project_name": "sufi-sb",
+            "project_name": "sufia-sb",
             "billing_id": "012BAE-CAC265-849A70",
             "organization_id": "906927793089",
             "owners_members": [
