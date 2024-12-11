@@ -17,7 +17,7 @@ module "projects" {
   source  = "terraform-google-modules/project-factory/google"
   version = "17.0.0"
   auto_create_network = true
-  random_project_id = var.random_suffix
+  random_project_id = false
   activate_apis     = var.api
   name              = var.project_name
   org_id            = local.org_id
