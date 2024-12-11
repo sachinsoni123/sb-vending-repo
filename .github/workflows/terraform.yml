@@ -39,19 +39,19 @@ jobs:
           service_account: "sb-test@sachinsoni.iam.gserviceaccount.com"
           workload_identity_provider: "projects/1019578273090/locations/global/workloadIdentityPools/test-git/providers/testing-jit"
 
-      # - name: Run Cleanup Script
-      #   id: cleanup
-      #   run: |
-      #     chmod +x deletion_script.sh
-      #     OUTPUT=$(./deletion_script.sh)
-      #     echo "$OUTPUT"
-      #     if [[ "$OUTPUT" == *"File deletion process completed. No files were deleted."* ]]; then
-      #       echo "deletion_occurred=false" >> $GITHUB_ENV
-      #     else
-      #       echo "deletion_occurred=true" >> $GITHUB_ENV
-      #     fi
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.DEMO_CLEANUP }}
+      - name: Run Cleanup Script
+        id: cleanup
+        run: |
+          chmod +x deletion_script.sh
+          OUTPUT=$(./deletion_script.sh)
+          echo "$OUTPUT"
+          if [[ "$OUTPUT" == *"File deletion process completed. No files were deleted."* ]]; then
+            echo "deletion_occurred=false" >> $GITHUB_ENV
+          else
+            echo "deletion_occurred=true" >> $GITHUB_ENV
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEMO_CLEANUP }}
 
       - name: Initialize Terraform for WORKING_DIRECTORY_1
         if: env.deletion_occurred == 'false'
