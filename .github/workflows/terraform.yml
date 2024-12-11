@@ -74,12 +74,12 @@ jobs:
           terraform plan
         working-directory: ${{ env.WORKING_DIRECTORY_1 }}
       
-      - name: Apply Terraform for WORKING_DIRECTORY_1
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && env.deletion_occurred == 'false'
-        run: |
-          echo "Applying Terraform in directory: ${{ env.WORKING_DIRECTORY_1 }}"
-          terraform apply -auto-approve
-        working-directory: ${{ env.WORKING_DIRECTORY_1 }}
+      # - name: Apply Terraform for WORKING_DIRECTORY_1
+      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push' && env.deletion_occurred == 'false'
+      #   run: |
+      #     echo "Applying Terraform in directory: ${{ env.WORKING_DIRECTORY_1 }}"
+      #     terraform apply -auto-approve
+      #   working-directory: ${{ env.WORKING_DIRECTORY_1 }}
 
       - name: Initialize Terraform for WORKING_DIRECTORY_2
         if: env.deletion_occurred == 'false'
@@ -103,9 +103,9 @@ jobs:
           terraform plan
         working-directory: ${{ env.WORKING_DIRECTORY_2 }}
 
-      - name: Apply Terraform for WORKING_DIRECTORY_2
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && env.deletion_occurred == 'false'
-        run: |
-          echo "Applying Terraform in directory: ${{ env.WORKING_DIRECTORY_2 }}"
-          terraform apply -auto-approve
-        working-directory: ${{ env.WORKING_DIRECTORY_2 }}
+      # - name: Apply Terraform for WORKING_DIRECTORY_2
+      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push' && env.deletion_occurred == 'false'
+      #   run: |
+      #     echo "Applying Terraform in directory: ${{ env.WORKING_DIRECTORY_2 }}"
+      #     terraform apply -auto-approve
+      #   working-directory: ${{ env.WORKING_DIRECTORY_2 }}
