@@ -7,13 +7,13 @@ module "sandbox_folder" {
 }
 
 module "sandbox_project" {
-  for_each       = local.project_vending_data_map
+  for_each       = { for k, v in local.project_vending_data_map : k => v if v.settings.sandbox-vending != false }
   source         = "../modules/project_factory"
-  project_name   = each.value.settings.project_name
-  api            = each.value.settings.api
+  project_name   = each.value.settings.sandbox-vending.project_name
+  api            = each.value.settings.sandbox-vending.api
   folder_id      = module.sandbox_folder[each.key].folder_id
-  labels         = each.value.settings.labels
-  owners_members = each.value.settings.owners_members
+  labels         = each.value.settings.sandbox-vending.labels
+  owners_members = each.value.settings.sandbox-vending.owners_members
   depends_on = [
     module.sandbox_folder
   ]
