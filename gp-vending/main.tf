@@ -28,6 +28,7 @@ module "app_project" {
   source         = "../modules/project_factory"
   project_name   = each.value.settings.gp-vending.project_name
   api            = each.value.settings.gp-vending.api
+  random_suffix  = true
   folder_id      = module.app_folder[each.key].folder_id
   labels         = each.value.settings.gp-vending.labels
   owners_members = each.value.settings.gp-vending.owners_members
