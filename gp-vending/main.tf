@@ -24,7 +24,7 @@ module "app_folder" {
 
 
 module "app_project" {
-  for_each        = { for k, v in local.project_vending_data_map : k => v if v.settings.gp-vending != false }
+  for_each       = { for k, v in local.project_vending_data_map : k => v if v.settings.gp-vending != false }
   source         = "../modules/project_factory"
   project_name   = each.value.settings.gp-vending.project_name
   api            = each.value.settings.gp-vending.api
