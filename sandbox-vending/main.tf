@@ -10,6 +10,7 @@ module "sandbox_project" {
   for_each       = { for k, v in local.project_vending_data_map : k => v if v.settings.sandbox-vending != false }
   source         = "../modules/project_factory"
   project_name   = each.value.settings.sandbox-vending.project_name
+  random_suffix  = false
   api            = each.value.settings.sandbox-vending.api
   folder_id      = module.sandbox_folder[each.key].folder_id
   labels         = each.value.settings.sandbox-vending.labels
