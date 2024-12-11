@@ -1,29 +1,6 @@
 {
     "settings": {
-        "sandbox-vending": {
-            "names": [
-                "sufi-sb"
-            ],
-            "parent_id": "folders/240572390624",
-            "api": [
-                "run.googleapis.com",
-                "compute.googleapis.com"
-            ],
-            "project_name": "sufi-sb",
-            "billing_id": "012BAE-CAC265-849A70",
-            "organization_id": "906927793089",
-            "owners_members": [
-                "user:nagesh.kumarsingh@66degrees.com"
-            ],
-            "notification_members": [
-                "nagesh.kumarsingh@66degrees.com",
-                "sachin.soni@66degrees.com"
-            ],
-            "approved_budget": "100",
-            "labels": {
-                "created-by": "terraform"
-            }
-        },
+        "sandbox-vending": false,
         "gp-vending": {
             "names_gp": [
                 "gp8"
