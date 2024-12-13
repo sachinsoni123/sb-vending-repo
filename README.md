@@ -10,6 +10,7 @@ The **Sandbox Vending Machine** is a sandbox environment created using Terraform
 - **Resource Organization**: Projects are organized under designated folders to ensure logical grouping and clarity.
 ### Architecture
 ![Logo](https://storage.googleapis.com/sachinsoni-sb-bucket-test-poc/sb-image.png)
+
 The above image depicts the sandbox structure created by Terraform. It includes:
 
 - **Root Folder**: A dedicated folder for sandbox projects.
