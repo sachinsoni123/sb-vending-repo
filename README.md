@@ -61,14 +61,10 @@ This module creates budget alerts for Google Cloud projects.
 
 ## Scripts
 
-### `fn_code/main.py`
+### `Cloud function Code`
 
-This script contains functions for managing Google Cloud projects and budgets.
-
-- `delete_project(project_id)`: Deletes a Google Cloud project.
-- `get_budget_utilization(project_id, billing_account_id)`: Gets the budget utilization for a project.
-- `list_projects_in_organization(org_id, billing_account_id)`: Lists all projects in the specified organization and billing account.
-- `main_entry(request)`: Main entry point for the script.
+- `fn_code/fn_proj_age_deleter/main.py`: Deletes a Google Cloud project based on the age if crosses the age of 30 days from the date of creation.
+- `fn_code/fn_proj_budget_deleter` : Deletes a Google Cloud project based on the budget if threshold breaches for the 100% of its allocated budget. This is an event driven function when a pubsub message is arrived and `alertThresholdExceeded` value is 1 (which means budget utilization is 100%) then it deletes the project.
 
 ### `deletion_script.sh`
 ### Overview
