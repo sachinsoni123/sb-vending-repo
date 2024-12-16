@@ -19,3 +19,10 @@ variable "approved_budget" {
   description = "Amount of budget approved for this project"
   default     = "100"
 }
+
+variable "pubsub_topic" {
+  description = "Pubsub Topic to send the budget message"
+  type        = string
+  default     = ""
+}
+

@@ -27,6 +27,7 @@ module "sandbox_budget_alert" {
   project_no      = module.sandbox_project[each.key].project_number
   approved_budget = each.value.settings.approved_budget
   members         = each.value.settings.notification_members
+  pubsub_topic    = each.value.settings.pubsub_topic
   depends_on = [
     module.sandbox_project
   ]
