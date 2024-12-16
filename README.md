@@ -64,7 +64,7 @@ This module creates budget alerts for Google Cloud projects.
 ### `Cloud function Code`
 
 - `fn_code/fn_proj_age_deleter/main.py`: Deletes a Google Cloud project based on the age if crosses the age of 30 days from the date of creation.
-- `fn_code/fn_proj_budget_deleter` : Deletes a Google Cloud project based on the budget if threshold breaches for the 100% of its allocated budget. This is an event driven function when a pubsub message is arrived and `alertThresholdExceeded` value is 1 (which means budget utilization is 100%) then it deletes the project.
+- `fn_code/fn_proj_budget_deleter` : This Cloud Function is triggered by messages published to a Cloud Pub/Sub topic when a budget alert threshold is exceeded. Upon receiving a notification indicating that 100% of the budget has been utilized (threshold `1.0`), the function identifies the associated project and deletes it.
 
 ### `deletion_script.sh`
 ### Overview
