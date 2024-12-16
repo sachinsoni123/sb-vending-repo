@@ -23,6 +23,7 @@
         "sachin.soni@66degrees.com"
       ],
       "approved_budget": "100",
+      "pubsub_topic" : "projects/sachinsoni/topics/audit-test"
       "labels": {
         "created-by": "terraform"
       }
