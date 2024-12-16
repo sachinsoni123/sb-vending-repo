@@ -43,6 +43,7 @@ resource "google_billing_budget" "budget" {
     for idx, value in google_monitoring_notification_channel.email : value.id
     ]
     disable_default_iam_recipients = true
+    pubsub_topic = var.pubsub_topic
   }
 
 
