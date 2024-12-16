@@ -31,6 +31,7 @@ module "app_project" {
   folder_id      = module.app_folder[each.key].folder_id
   labels         = each.value.settings.labels
   owners_members = each.value.settings.owners_members
+  pubsub_topic   = each.value.settings.pubsub_topic
   depends_on = [
     module.app_folder
   ]
