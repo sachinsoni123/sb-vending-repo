@@ -15,14 +15,9 @@ def delete_project(project_id):
     except Exception as e:
         logging.error(f"Failed to delete project {project_id}: {e}")
 
-def get_budget_utilization(project_id, billing_account_id):
-    #testing
-    budget_used_percentage = 100  
-    logging.info(f"Budget utilization for project {project_id}: {budget_used_percentage}%")
-    return budget_used_percentage
 
-def list_projects_in_organization(org_id, billing_account_id):
-    """Lists all projects in the specified organization and billing account."""
+def list_projects_in_organization(org_id):
+    """Lists all projects in the specified organization"""
     # Initialize clients
     project_client = resourcemanager_v3.ProjectsClient()
     folder_client = resourcemanager_v3.FoldersClient()
@@ -85,12 +80,11 @@ def list_projects_in_organization(org_id, billing_account_id):
     return projects_in_org
 
 def main_entry(request):
-    ORG_ID = "906927793089" 
-    BILLING_ACCOUNT_ID = "012BAE-CAC265-849A70"
+    ORG_ID = os.environ.get('ORG_ID')
 
 
     # Fetch projects from the organization
-    projects = list_projects_in_organization(ORG_ID, BILLING_ACCOUNT_ID)
+    projects = list_projects_in_organization(ORG_ID)
 
     if projects:
         logging.info(f"Found {len(projects)} active projects with label 'created-by: terraform':")
@@ -98,11 +92,10 @@ def main_entry(request):
             logging.info(f"Project ID: {project['project_id']}, Name: {project['project_name']}, "
                          f"Created: {project['create_time']}, Age: {project['age_days']} days")
 
-            # Check if project meets deletion criteria
-            budget_utilization = get_budget_utilization(project['project_id'], BILLING_ACCOUNT_ID)
-            if project['age_days'] > 30 or budget_utilization >= 100:
-                #delete_project(project['project_id'])
-                pass
+
+            if project['age_days'] > 30:
+                delete_project(project['project_id'])
+                
     else:
         logging.info("No active projects with label 'created-by: terraform' found.")
 
