@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  K8S_NAMESPACE: default
+
 permissions:
   id-token: write      
   contents: read  
