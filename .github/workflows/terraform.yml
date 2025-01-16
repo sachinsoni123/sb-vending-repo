@@ -66,6 +66,14 @@ jobs:
           kubectl patch service my-service \
             -p '{"spec":{"selector":{"version":"blue"}}}'
           kubectl rollout status deployment/blue
+          
+      - name: Delete Older Deployment (Blue)
+        if: success()
+        run: |
+          echo "Deleting older deployment (Blue)..."
+          kubectl delete deployment/blue || echo "No blue deployment to delete"
+
+      
 
 
 
