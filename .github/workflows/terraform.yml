@@ -1,111 +1,179 @@
-name: "Terraform CI"
+name: Blue-Green Deployment with WIF
 
 on:
   push:
     branches:
-      - "feature/**"
       - main
-  pull_request:
-  
-  repository_dispatch:
-    types: 
-      - trigger-gitops
+
 jobs:
-  terraform:
-    name: "Terraform"
+  deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: "write"
-      id-token: "write"
-    env:
-      WORKING_DIRECTORY_1: gp-vending
-      WORKING_DIRECTORY_2: sandbox-vending
-      GITHUB_TOKEN: ${{ secrets.DEMO_CLEANUP }}
-
-    defaults:
-      run:
-        shell: bash
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Set Google Cloud credentials
-        uses: "google-github-actions/auth@v2"
+      - name: Authenticate using WIF
+        uses: google-github-actions/auth@v1
         with:
-          service_account: "sb-test@sachinsoni.iam.gserviceaccount.com"
           workload_identity_provider: "projects/1019578273090/locations/global/workloadIdentityPools/test-git/providers/testing-jit"
+          service_account: "sb-test@sachinsoni.iam.gserviceaccount.com"
 
-      - name: Run Cleanup Script
-        id: cleanup
-        run: |
-          chmod +x deletion_script.sh
-          OUTPUT=$(./deletion_script.sh)
-          echo "$OUTPUT"
-          if [[ "$OUTPUT" == *"File deletion process completed. No files were deleted."* ]]; then
-            echo "deletion_occurred=false" >> $GITHUB_ENV
-          else
-            echo "deletion_occurred=true" >> $GITHUB_ENV
-          fi
-        env:
-          GITHUB_TOKEN: ${{ secrets.DEMO_CLEANUP }}
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
 
-      - name: Initialize Terraform for gp-vending
-        if: env.deletion_occurred == 'false'
+      - name: Configure kubectl
         run: |
-          echo "Initializing Terraform in directory: ${{ env.WORKING_DIRECTORY_1 }}"
-          terraform init
-        working-directory: ${{ env.WORKING_DIRECTORY_1 }}
+          gcloud container clusters get-credentials test-cluster \
+            --zone us-central1-a \
+            --project sachinsoni
+
+      - name: Deploy to Green
+        run: |
+          kubectl apply -f k8s/green-deployment.yaml
+          kubectl rollout status deployment/green
+
+      - name: Switch Traffic to Green
+        run: |
+          kubectl patch service my-service \
+            -p '{"spec":{"selector":{"version":"green"}}}'
+
+      - name: Validate Green Deployment
+        run: |
+          # Replace with your custom health check logic
+          kubectl get pods --selector=version=green
+        continue-on-error: true
+
+      - name: Rollback to Blue
+        if: failure()
+        run: |
+          echo "Rolling back to blue deployment..."
+          kubectl patch service my-service \
+            -p '{"spec":{"selector":{"version":"blue"}}}'
+          kubectl rollout status deployment/blue
+
+
+
+
+
+
+
+
+#------------------------------------------------------------------------------------------------
+
+
+
+
+
+# name: "Terraform CI"
+
+# on:
+#   push:
+#     branches:
+#       - "feature/**"
+#       - main
+#   pull_request:
+  
+#   repository_dispatch:
+#     types: 
+#       - trigger-gitops
+# jobs:
+#   terraform:
+#     name: "Terraform"
+#     runs-on: ubuntu-latest
+#     permissions:
+#       contents: "write"
+#       id-token: "write"
+#     env:
+#       WORKING_DIRECTORY_1: gp-vending
+#       WORKING_DIRECTORY_2: sandbox-vending
+#       GITHUB_TOKEN: ${{ secrets.DEMO_CLEANUP }}
+
+#     defaults:
+#       run:
+#         shell: bash
+
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v2
+
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
+
+#       - name: Set Google Cloud credentials
+#         uses: "google-github-actions/auth@v2"
+#         with:
+#           service_account: "sb-test@sachinsoni.iam.gserviceaccount.com"
+#           workload_identity_provider: "projects/1019578273090/locations/global/workloadIdentityPools/test-git/providers/testing-jit"
+
+#       - name: Run Cleanup Script
+#         id: cleanup
+#         run: |
+#           chmod +x deletion_script.sh
+#           OUTPUT=$(./deletion_script.sh)
+#           echo "$OUTPUT"
+#           if [[ "$OUTPUT" == *"File deletion process completed. No files were deleted."* ]]; then
+#             echo "deletion_occurred=false" >> $GITHUB_ENV
+#           else
+#             echo "deletion_occurred=true" >> $GITHUB_ENV
+#           fi
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.DEMO_CLEANUP }}
+
+#       - name: Initialize Terraform for gp-vending
+#         if: env.deletion_occurred == 'false'
+#         run: |
+#           echo "Initializing Terraform in directory: ${{ env.WORKING_DIRECTORY_1 }}"
+#           terraform init
+#         working-directory: ${{ env.WORKING_DIRECTORY_1 }}
         
-      - name: Format Terraform for gp-vending
-        if: env.deletion_occurred == 'false'
-        run: |
-          echo "Formatting Terraform in directory: ${{ env.WORKING_DIRECTORY_1 }}"
-          terraform fmt -check
-        working-directory: ${{ env.WORKING_DIRECTORY_1 }}
+#       - name: Format Terraform for gp-vending
+#         if: env.deletion_occurred == 'false'
+#         run: |
+#           echo "Formatting Terraform in directory: ${{ env.WORKING_DIRECTORY_1 }}"
+#           terraform fmt -check
+#         working-directory: ${{ env.WORKING_DIRECTORY_1 }}
       
-      - name: Plan Terraform for gp-vending
-        if: env.deletion_occurred == 'false'
-        run: |
-          echo "Planning Terraform in directory: ${{ env.WORKING_DIRECTORY_1 }}"
-          terraform plan
-        working-directory: ${{ env.WORKING_DIRECTORY_1 }}
+#       - name: Plan Terraform for gp-vending
+#         if: env.deletion_occurred == 'false'
+#         run: |
+#           echo "Planning Terraform in directory: ${{ env.WORKING_DIRECTORY_1 }}"
+#           terraform plan
+#         working-directory: ${{ env.WORKING_DIRECTORY_1 }}
       
-      # - name: Apply Terraform for gp-vending
-      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push' && env.deletion_occurred == 'false'
-      #   run: |
-      #     echo "Applying Terraform in directory: ${{ env.WORKING_DIRECTORY_1 }}"
-      #     terraform apply -auto-approve
-      #   working-directory: ${{ env.WORKING_DIRECTORY_1 }}
+#       # - name: Apply Terraform for gp-vending
+#       #   if: github.ref == 'refs/heads/main' && github.event_name == 'push' && env.deletion_occurred == 'false'
+#       #   run: |
+#       #     echo "Applying Terraform in directory: ${{ env.WORKING_DIRECTORY_1 }}"
+#       #     terraform apply -auto-approve
+#       #   working-directory: ${{ env.WORKING_DIRECTORY_1 }}
 
-      - name: Initialize Terraform for sandbox-vending
-        if: env.deletion_occurred == 'false'
-        run: |
-          echo "Initializing Terraform in directory: ${{ env.WORKING_DIRECTORY_2 }}"
-          terraform init
-        working-directory: ${{ env.WORKING_DIRECTORY_2 }}
+#       - name: Initialize Terraform for sandbox-vending
+#         if: env.deletion_occurred == 'false'
+#         run: |
+#           echo "Initializing Terraform in directory: ${{ env.WORKING_DIRECTORY_2 }}"
+#           terraform init
+#         working-directory: ${{ env.WORKING_DIRECTORY_2 }}
 
       
-      - name: Format Terraform for sandbox-vending
-        if: env.deletion_occurred == 'false'
-        run: |
-          echo "Formatting Terraform in directory: ${{ env.WORKING_DIRECTORY_2 }}"
-          terraform fmt -check
-        working-directory: ${{ env.WORKING_DIRECTORY_2 }}
+#       - name: Format Terraform for sandbox-vending
+#         if: env.deletion_occurred == 'false'
+#         run: |
+#           echo "Formatting Terraform in directory: ${{ env.WORKING_DIRECTORY_2 }}"
+#           terraform fmt -check
+#         working-directory: ${{ env.WORKING_DIRECTORY_2 }}
 
-      - name: Plan Terraform for sandbox-vending
-        if: env.deletion_occurred == 'false'
-        run: |
-          echo "Planning Terraform in directory: ${{ env.WORKING_DIRECTORY_2 }}"
-          terraform plan
-        working-directory: ${{ env.WORKING_DIRECTORY_2 }}
+#       - name: Plan Terraform for sandbox-vending
+#         if: env.deletion_occurred == 'false'
+#         run: |
+#           echo "Planning Terraform in directory: ${{ env.WORKING_DIRECTORY_2 }}"
+#           terraform plan
+#         working-directory: ${{ env.WORKING_DIRECTORY_2 }}
 
-      # - name: Apply Terraform for sandbox-vending
-      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push' && env.deletion_occurred == 'false'
-      #   run: |
-      #     echo "Applying Terraform in directory: ${{ env.WORKING_DIRECTORY_2 }}"
-      #     terraform apply -auto-approve
-      #   working-directory: ${{ env.WORKING_DIRECTORY_2 }}
+#       # - name: Apply Terraform for sandbox-vending
+#       #   if: github.ref == 'refs/heads/main' && github.event_name == 'push' && env.deletion_occurred == 'false'
+#       #   run: |
+#       #     echo "Applying Terraform in directory: ${{ env.WORKING_DIRECTORY_2 }}"
+#       #     terraform apply -auto-approve
+#       #   working-directory: ${{ env.WORKING_DIRECTORY_2 }}
