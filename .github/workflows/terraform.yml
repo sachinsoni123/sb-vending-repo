@@ -43,36 +43,31 @@ jobs:
             --zone us-central1-a \
             --project sachinsoni
 
-      - name: Deploy to Green
+      - name: Get current version
+        id: get-version
         run: |
-          kubectl apply -f test-bg/deployment-green.yaml
-          kubectl rollout status deployment/green
+          CURRENT_VERSION=$(kubectl get service my-service -n ${{ env.K8S_NAMESPACE }} -o jsonpath='{.spec.selector.version}')
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
 
-      - name: Switch Traffic to Green
+      - name: Deploy new version
+        env:
+          CURRENT_VERSION: ${{ steps.get-version.outputs.current_version }}
+          NEW_VERSION: ${{ steps.get-version.outputs.current_version == 'blue' && 'green' || 'blue' }}
         run: |
-          kubectl patch service my-service \
-            -p '{"spec":{"selector":{"version":"green"}}}'
-
-      - name: Validate Green Deployment
-        run: |
-          # Replace with your custom health check logic
-          kubectl get pods --selector=version=green
-        continue-on-error: true
-
-      - name: Rollback to Blue
-        if: failure()
-        run: |
-          echo "Rolling back to blue deployment..."
-          kubectl patch service my-service \
-            -p '{"spec":{"selector":{"version":"blue"}}}'
-          kubectl rollout status deployment/blue
+          # Deploy new version
+          envsubst < test-bg/deployment-${NEW_VERSION}.yaml | kubectl apply -f -
           
-      - name: Delete Older Deployment (Blue)
-        if: success()
-        run: |
-          echo "Deleting older deployment (Blue)..."
-          kubectl delete deployment/blue || echo "No blue deployment to delete"
-
+          # Wait for deployment to be ready
+          kubectl rollout status deployment/app-${NEW_VERSION} -n ${{ env.K8S_NAMESPACE }}
+          
+          # Switch traffic to new version
+          kubectl patch service myapp-service -n ${{ env.K8S_NAMESPACE }} --type='json' -p='[{"op": "replace", "path": "/spec/selector/version", "value":"'${NEW_VERSION}'"}]'
+          
+          # Wait for service to stabilize
+          sleep 30
+          
+          # Delete old version
+          kubectl delete deployment app-${CURRENT_VERSION} -n ${{ env.K8S_NAMESPACE }}
       
 
 
