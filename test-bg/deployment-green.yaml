@@ -16,6 +16,6 @@ spec:
     spec:
       containers:
       - name: my-app
-        image: us-central1-docker.pkg.dev/sachinsoni/test/frontend
+        image: nginx:latest
         ports:
         - containerPort: 80
