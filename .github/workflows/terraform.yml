@@ -35,7 +35,7 @@ jobs:
 
       - name: Deploy to Green
         run: |
-          kubectl apply -f k8s/green-deployment.yaml
+          kubectl apply -f test-bg/green-deployment.yaml
           kubectl rollout status deployment/green
 
       - name: Switch Traffic to Green
