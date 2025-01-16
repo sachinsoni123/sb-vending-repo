@@ -61,16 +61,16 @@ jobs:
           envsubst < test-bg/deployment-${NEW_VERSION}.yaml | kubectl apply -f -
           
           # Wait for deployment to be ready
-          kubectl rollout status deployment/app-${NEW_VERSION} -n ${{ env.K8S_NAMESPACE }}
+          kubectl rollout status deployment/${NEW_VERSION} -n ${{ env.K8S_NAMESPACE }}
           
           # Switch traffic to new version
-          kubectl patch service myapp-service -n ${{ env.K8S_NAMESPACE }} --type='json' -p='[{"op": "replace", "path": "/spec/selector/version", "value":"'${NEW_VERSION}'"}]'
+          kubectl patch service my-service -n ${{ env.K8S_NAMESPACE }} --type='json' -p='[{"op": "replace", "path": "/spec/selector/version", "value":"'${NEW_VERSION}'"}]'
           
           # Wait for service to stabilize
           sleep 30
           
           # Delete old version
-          kubectl delete deployment app-${CURRENT_VERSION} -n ${{ env.K8S_NAMESPACE }}
+          kubectl delete deployment ${CURRENT_VERSION} -n ${{ env.K8S_NAMESPACE }}
       
 
 
